@@ -4,7 +4,7 @@ python:
   - "3.6"
 install:
   - pip install .
-  - pip install pytest pytest-cov coveralls
+  - pip install --upgrade pytest pytest-cov coveralls
 script:
   - pytest -v --cov=minimc test/
 after_success:
