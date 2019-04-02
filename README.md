@@ -6,7 +6,7 @@ minimc
 
 This is a test library to provide reference implementations of MCMC algorithms and ideas. The basis and reference for much of this library is from Michael Betancourt's wonderful [A Conceptual Introduction to Hamiltonian Monte Carlo](https://arxiv.org/abs/1701.02434).
 
-**The highlight of the library** right now is the ~15 line Hamiltonian Monte Carlo implementation (which relies on an 8 line integrator). Both of these are commented and documented, but aim to be instructive to read.
+**The highlight of the library** right now is the ~15 line [Hamiltonian Monte Carlo implementation](minimc/minimc.py) (which relies on an 8 line integrator). Both of these are commented and documented, but aim to be instructive to read.
 
 Currently Implemented
 ---------------------
