@@ -3,6 +3,8 @@ minimc
 
 *Just a little MCMC*
 --------------------
+[![Build Status](https://travis-ci.org/ColCarroll/minimc.svg?branch=master)](https://travis-ci.org/ColCarroll/minimc) [![Coverage Status](https://coveralls.io/repos/github/ColCarroll/minimc/badge.svg?branch=master)](https://coveralls.io/github/ColCarroll/minimc?branch=master)
+
 
 This is a test library to provide reference implementations of MCMC algorithms and ideas. The basis and reference for much of this library is from Michael Betancourt's wonderful [A Conceptual Introduction to Hamiltonian Monte Carlo](https://arxiv.org/abs/1701.02434).
 
