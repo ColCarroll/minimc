@@ -28,6 +28,6 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     packages=find_packages(exclude=["test"]),
-    install_requires=["autograd"],
+    install_requires=["autograd", "tqdm", "scipy"],
     include_package_data=True,
 )
