@@ -1,0 +1,11 @@
+sudo: false
+language: python
+python:
+  - "3.6"
+install:
+  - pip install .
+  - pip install pytest pytest-cov coveralls
+script:
+  - pytest -v --cov=minimc test/
+after_success:
+  - coveralls
