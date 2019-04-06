@@ -25,6 +25,7 @@ Roadmap
 - Diagnostics
 - [NUTS](https://arxiv.org/abs/1111.4246)
 - [Empirical HMC](https://arxiv.org/abs/1810.04449)
+- Riemannian Manifold HMC [Girolami & Calderhead](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.221.6963&rep=rep1&type=pdf) and [Betancourt](https://arxiv.org/abs/1212.4693)
 
 Installation
 ------------
