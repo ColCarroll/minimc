@@ -15,11 +15,12 @@ Currently Implemented
 - Step size tuning
 - Leapfrog integrator
 - Hamiltonian Monte Carlo
-- Some log probabilities (normal, multivariate normal, mixtures)
+- Some log probabilities (normal, multivariate normal, mixtures, funnel)
 
 Roadmap
 -------
 
+- Divergences
 - Mass matrix adaptation
 - Diagnostics
 - [NUTS](https://arxiv.org/abs/1111.4246)
@@ -148,7 +149,7 @@ samples, positions, momentums, accepted = hmc_slow(20, neg_log_p, np.zeros(2),
                                                    path_len=3,
                                                    step_size=0.01)
 
-100%|███████████████████████████████████████████| 2500/2500 [00:08<00:00, 2.31it/s]
+100%|███████████████████████████████████████████| 20/20 [00:08<00:00, 2.31it/s]
 ```
 
 <img src="examples/plot8.png" width="400">
