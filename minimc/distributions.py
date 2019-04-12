@@ -1,7 +1,7 @@
 import autograd.numpy as np
 from autograd.scipy.misc import logsumexp
 
-__all__ = ["neg_log_normal", "neg_log_mvnormal", "mixture"]
+__all__ = ["neg_log_normal", "neg_log_mvnormal", "mixture", "neg_log_funnel"]
 
 
 def neg_log_normal(mu, sigma):
@@ -27,6 +27,30 @@ def neg_log_mvnormal(mu, sigma):
         ) * 0.5
 
     return logp
+
+
+def neg_log_funnel():
+    """Neal's funnel.
+
+    The pdf is
+
+    p(x) = N(x[0] | 0, 1) N(x[1:] | 0, exp(2 * x[0]) I )
+
+    May cause divergences!
+    """
+    scale = neg_log_normal(0, 1)
+
+    def neg_log_p(x):
+        funnel_dim = x.shape[0] - 1
+        if funnel_dim == 1:
+            funnel = neg_log_normal(0, np.exp(2 * x[0]))
+        else:
+            funnel = neg_log_mvnormal(
+                np.zeros(funnel_dim), np.exp(2 * x[0]) * np.eye(funnel_dim)
+            )
+        return scale(x[0]) + funnel(x[1:])
+
+    return neg_log_p
 
 
 def mixture(neg_log_probs, probs):
