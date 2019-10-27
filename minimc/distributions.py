@@ -1,5 +1,5 @@
 import autograd.numpy as np
-from autograd.scipy.misc import logsumexp
+from autograd.scipy.special import logsumexp
 
 __all__ = ["neg_log_normal", "neg_log_mvnormal", "mixture", "neg_log_funnel"]
 
