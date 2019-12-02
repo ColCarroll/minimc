@@ -38,4 +38,3 @@ def test_neg_log_funnel():
         print(x)
         true_log_p = true_scale.logpdf(x[0]) + st.norm(0, np.exp(2 * x[0])).logpdf(x[1])
         assert_almost_equal(neg_log_p(x), -true_log_p)
-

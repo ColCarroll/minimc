@@ -4,48 +4,19 @@ from autograd import grad, elementwise_grad
 import scipy.stats as st
 from tqdm import tqdm
 
-__all__ = ["leapfrog", "hamiltonian_monte_carlo"]
+from .integrators_slow import leapfrog, leapfrog_twostage, leapfrog_threestage
 
-
-def leapfrog(q, p, dVdq, path_len, step_size):
-    """Leapfrog integrator for Hamiltonian Monte Carlo.
-
-    Parameters
-    ----------
-    q : np.floatX
-        Initial position
-    p : np.floatX
-        Initial momentum
-    dVdq : callable
-        Gradient of the velocity
-    path_len : float
-        How long to integrate for
-    step_size : float
-        How long each integration step should be
-
-    Returns
-    -------
-    q, p : np.floatX, np.floatX
-        New position and momentum
-    """
-    q, p = np.copy(q), np.copy(p)
-    positions, momentums = [np.copy(q)], [np.copy(p)]
-
-    velocity = dVdq(q)
-    for _ in range(int(path_len / step_size)):
-        p -= step_size * velocity / 2  # half step
-        q += step_size * p  # whole step
-        positions.append(np.copy(q))
-        velocity = dVdq(q)
-        p -= step_size * velocity / 2  # half step
-        momentums.append(np.copy(p))
-
-    # momentum flip at end
-    return q, -p, np.array(positions), np.array(momentums)
+__all__ = ["hamiltonian_monte_carlo"]
 
 
 def hamiltonian_monte_carlo(
-    n_samples, negative_log_prob, initial_position, path_len=1, step_size=0.1
+    n_samples,
+    negative_log_prob,
+    initial_position,
+    path_len=1,
+    step_size=0.1,
+    integrator=leapfrog,
+    do_reject=True,
 ):
     """Run Hamiltonian Monte Carlo sampling.
 
@@ -61,6 +32,10 @@ def hamiltonian_monte_carlo(
         How long each integration path is. Smaller is faster and more correlated.
     step_size : float
         How long each integration step is. Smaller is slower and more accurate.
+    integrator: callable
+        Integrator to use, from `integrators_slow.py`
+    do_reject: boolean
+        Turn off metropolis correction. Not valid MCMC if False!
 
     Returns
     -------
@@ -75,6 +50,7 @@ def hamiltonian_monte_carlo(
     samples = [initial_position]
     sample_positions, sample_momentums = [], []
     accepted = []
+    p_accepts = []
 
     # Keep a single object for momentum resampling
     momentum = st.norm(0, 1)
@@ -84,12 +60,8 @@ def hamiltonian_monte_carlo(
     size = (n_samples,) + initial_position.shape[:1]
     for p0 in tqdm(momentum.rvs(size=size)):
         # Integrate over our path to get a new position and momentum
-        q_new, p_new, positions, momentums = leapfrog(
-            samples[-1],
-            p0,
-            dVdq,
-            path_len=2 * np.random.rand() * path_len,  # We jitter the path length a bit
-            step_size=step_size,
+        q_new, p_new, positions, momentums, _ = integrator(
+            samples[-1], p0, dVdq, path_len=path_len, step_size=step_size
         )
         sample_positions.append(positions)
         sample_momentums.append(momentums)
@@ -97,17 +69,22 @@ def hamiltonian_monte_carlo(
         # Check Metropolis acceptance criterion
         start_log_p = negative_log_prob(samples[-1]) - np.sum(momentum.logpdf(p0))
         new_log_p = negative_log_prob(q_new) - np.sum(momentum.logpdf(p_new))
-        if np.log(np.random.rand()) < start_log_p - new_log_p:
+        p_accept = np.exp(start_log_p - new_log_p)
+        if np.random.rand() < p_accept:
             samples.append(q_new)
             accepted.append(True)
         else:
-            samples.append(np.copy(samples[-1]))
+            if do_reject:
+                samples.append(np.copy(samples[-1]))
+            else:
+                samples.append(q_new)
             accepted.append(False)
+        p_accepts.append(p_accept)
 
     return (
         np.array(samples[1:]),
         np.array(sample_positions),
         np.array(sample_momentums),
         np.array(accepted),
+        np.array(p_accepts),
     )
-

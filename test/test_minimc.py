@@ -1,8 +1,11 @@
+import pytest
+
 from autograd import grad
 import autograd.numpy as np
 from numpy.testing import assert_allclose, assert_almost_equal
 
 from minimc import leapfrog, hamiltonian_monte_carlo, neg_log_normal, neg_log_mvnormal
+from minimc.integrators import leapfrog_twostage, leapfrog_threestage
 
 
 def test_leapfrog():
@@ -34,14 +37,19 @@ def test_leapfrog_mv():
     assert_almost_equal(p_new, p)
 
 
-def test_hamiltonian_monte_carlo():
+@pytest.mark.parametrize(
+    "integrator", [leapfrog, leapfrog_twostage, leapfrog_threestage]
+)
+def test_hamiltonian_monte_carlo(integrator):
     # This mostly tests consistency. Tolerance chosen by experiment
     # Do statistical tests on your own time.
     np.random.seed(1)
     neg_log_p = neg_log_normal(2, 0.1)
-    samples = hamiltonian_monte_carlo(100, neg_log_p, np.array(0.0))
+    samples = hamiltonian_monte_carlo(
+        100, neg_log_p, np.array(0.0), integrator=integrator
+    )
     assert samples.shape[0] == 100
-    assert_allclose(2.0, np.mean(samples), atol=0.02)
+    assert_allclose(2.0, np.mean(samples), atol=0.022)
     assert_allclose(0.1, np.std(samples), atol=0.007)
 
 
