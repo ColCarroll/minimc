@@ -180,4 +180,3 @@ if __name__ == "__main__":
 
     ax.set_title("Multivariate mixture trajectories!\nArrows show momentum!")
     plt.savefig(os.path.join(HERE, "plot8.png"))
-

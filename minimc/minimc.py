@@ -4,41 +4,9 @@ from autograd import grad, elementwise_grad
 import scipy.stats as st
 from tqdm import tqdm
 
-__all__ = ["leapfrog", "hamiltonian_monte_carlo"]
+from .integrators import leapfrog
 
-
-def leapfrog(q, p, dVdq, path_len, step_size):
-    """Leapfrog integrator for Hamiltonian Monte Carlo.
-
-    Parameters
-    ----------
-    q : np.floatX
-        Initial position
-    p : np.floatX
-        Initial momentum
-    dVdq : callable
-        Gradient of the velocity
-    path_len : float
-        How long to integrate for
-    step_size : float
-        How long each integration step should be
-
-    Returns
-    -------
-    q, p : np.floatX, np.floatX
-        New position and momentum
-    """
-    q, p = np.copy(q), np.copy(p)
-
-    p -= step_size * dVdq(q) / 2  # half step
-    for _ in np.arange(np.round(path_len / step_size) - 1):
-        q += step_size * p  # whole step
-        p -= step_size * dVdq(q)  # whole step
-    q += step_size * p  # whole step
-    p -= step_size * dVdq(q) / 2  # half step
-
-    # momentum flip at end
-    return q, -p
+__all__ = ["hamiltonian_monte_carlo"]
 
 
 def hamiltonian_monte_carlo(
@@ -48,6 +16,7 @@ def hamiltonian_monte_carlo(
     tune=500,
     path_len=1,
     initial_step_size=0.1,
+    integrator=leapfrog,
 ):
     """Run Hamiltonian Monte Carlo sampling.
 
@@ -88,7 +57,7 @@ def hamiltonian_monte_carlo(
     size = (n_samples + tune,) + initial_position.shape[:1]
     for idx, p0 in tqdm(enumerate(momentum.rvs(size=size)), total=size[0]):
         # Integrate over our path to get a new position and momentum
-        q_new, p_new = leapfrog(
+        q_new, p_new = integrator(
             samples[-1],
             p0,
             dVdq,
