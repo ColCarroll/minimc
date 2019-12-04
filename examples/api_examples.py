@@ -10,7 +10,42 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FIGSIZE = (10, 7)
 
 if __name__ == "__main__":
-    plt.style.use("tufte")
+    plt.rcParams.update(
+        {
+            "axes.prop_cycle": plt.cycler(
+                "color",
+                [
+                    "#000000",
+                    "#1b6989",
+                    "#e69f00",
+                    "#009e73",
+                    "#f0e442",
+                    "#50b4e9",
+                    "#d55e00",
+                    "#cc79a7",
+                ],
+            ),
+            "figure.figsize": [12.0, 5.0],
+            "font.serif": [
+                "Palatino",
+                "Palatino Linotype",
+                "Palatino LT STD",
+                "Book Antiqua",
+                "Georgia",
+                "DejaVu Serif",
+            ],
+            "font.family": "serif",
+            "figure.facecolor": "#fffff8",
+            "axes.facecolor": "#fffff8",
+            "figure.constrained_layout.use": True,
+            "font.size": 14.0,
+            "hist.bins": "auto",
+            "lines.linewidth": 3.0,
+            "lines.markeredgewidth": 2.0,
+            "lines.markerfacecolor": "none",
+            "lines.markersize": 8.0,
+        }
+    )
 
     ### Example 1 ###
     samples = hamiltonian_monte_carlo(
