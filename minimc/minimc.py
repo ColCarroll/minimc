@@ -1,6 +1,5 @@
 # Implementations of samplers for casual use.
-import autograd.numpy as np
-from autograd import grad, elementwise_grad
+import numpy as np
 import scipy.stats as st
 from tqdm import tqdm
 
@@ -11,8 +10,10 @@ __all__ = ["hamiltonian_monte_carlo"]
 
 def hamiltonian_monte_carlo(
     n_samples,
-    negative_log_prob,
+    potential,
     initial_position,
+    initial_potential=None,
+    initial_potential_grad=None,
     tune=500,
     path_len=1,
     initial_step_size=0.1,
@@ -41,8 +42,8 @@ def hamiltonian_monte_carlo(
         Array of length `n_samples`.
     """
     initial_position = np.array(initial_position)
-    # autograd magic
-    dVdq = grad(negative_log_prob)
+    if initial_potential is None or initial_potential_grad is None:
+        initial_potential, initial_potential_grad = potential(initial_position)
 
     # collect all our samples in a list
     samples = [initial_position]
@@ -57,20 +58,25 @@ def hamiltonian_monte_carlo(
     size = (n_samples + tune,) + initial_position.shape[:1]
     for idx, p0 in tqdm(enumerate(momentum.rvs(size=size)), total=size[0]):
         # Integrate over our path to get a new position and momentum
-        q_new, p_new = integrator(
+        q_new, p_new, final_V, final_dVdq = integrator(
             samples[-1],
             p0,
-            dVdq,
-            path_len=2 * np.random.rand() * path_len,  # We jitter the path length a bit
+            initial_potential_grad,
+            potential,
+            path_len=2
+            * np.random.rand()
+            * path_len,  # We jitter the path length a bit
             step_size=step_size,
         )
 
         # Check Metropolis acceptance criterion
-        start_log_p = np.sum(momentum.logpdf(p0)) - negative_log_prob(samples[-1])
-        new_log_p = np.sum(momentum.logpdf(p_new)) - negative_log_prob(q_new)
+        start_log_p = np.sum(momentum.logpdf(p0)) - initial_potential
+        new_log_p = np.sum(momentum.logpdf(p_new)) - final_V
         p_accept = min(1, np.exp(new_log_p - start_log_p))
         if np.random.rand() < p_accept:
             samples.append(q_new)
+            initial_potential = final_V
+            initial_potential_grad = final_dVdq
         else:
             samples.append(np.copy(samples[-1]))
         if idx < tune - 1:
@@ -83,7 +89,12 @@ def hamiltonian_monte_carlo(
 
 class DualAveragingStepSize:
     def __init__(
-        self, initial_step_size, target_accept=0.8, gamma=0.05, t0=10.0, kappa=0.75
+        self,
+        initial_step_size,
+        target_accept=0.8,
+        gamma=0.05,
+        t0=10.0,
+        kappa=0.75,
     ):
         """Tune the step size to achieve a desired target acceptance.
 
@@ -133,6 +144,8 @@ class DualAveragingStepSize:
         self.error_sum += self.target_accept - p_accept
         log_step = self.mu - self.error_sum / (np.sqrt(self.t) * self.gamma)
         eta = self.t ** -self.kappa
-        self.log_averaged_step = eta * log_step + (1 - eta) * self.log_averaged_step
+        self.log_averaged_step = (
+            eta * log_step + (1 - eta) * self.log_averaged_step
+        )
         self.t += 1
         return np.exp(log_step), np.exp(self.log_averaged_step)

@@ -1,3 +1,3 @@
 from .minimc import *
-from .distributions import *
+from .autograd_interface.distributions import *
 from .integrators import *

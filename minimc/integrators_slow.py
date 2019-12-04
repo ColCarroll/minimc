@@ -1,4 +1,4 @@
-import autograd.numpy as np
+import numpy as np
 
 __all__ = ["naive", "leapfrog", "leapfrog_twostage", "leapfrog_threestage"]
 

@@ -1,18 +1,19 @@
 # Implementations of samplers for plotting and experiments.
-import autograd.numpy as np
-from autograd import grad, elementwise_grad
+import numpy as np
 import scipy.stats as st
 from tqdm import tqdm
 
-from .integrators_slow import leapfrog, leapfrog_twostage, leapfrog_threestage
+from .integrators_slow import leapfrog
 
 __all__ = ["hamiltonian_monte_carlo"]
 
 
 def hamiltonian_monte_carlo(
     n_samples,
-    negative_log_prob,
+    potential,
     initial_position,
+    initial_potential=None,
+    initial_potential_grad=None,
     path_len=1,
     step_size=0.1,
     integrator=leapfrog,
@@ -43,8 +44,8 @@ def hamiltonian_monte_carlo(
         Array of length `n_samples`.
     """
     initial_position = np.array(initial_position)
-    # autograd magic
-    dVdq = grad(negative_log_prob)
+    negative_log_prob = lambda q: potential(q)[0]  # NOQA
+    dVdq = lambda q: potential(q)[1]  # NOQA
 
     # collect all our samples in a list
     samples = [initial_position]
@@ -67,7 +68,9 @@ def hamiltonian_monte_carlo(
         sample_momentums.append(momentums)
 
         # Check Metropolis acceptance criterion
-        start_log_p = negative_log_prob(samples[-1]) - np.sum(momentum.logpdf(p0))
+        start_log_p = negative_log_prob(samples[-1]) - np.sum(
+            momentum.logpdf(p0)
+        )
         new_log_p = negative_log_prob(q_new) - np.sum(momentum.logpdf(p_new))
         p_accept = np.exp(start_log_p - new_log_p)
         if np.random.rand() < p_accept:
