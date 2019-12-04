@@ -1,20 +1,25 @@
 import os
 
 import autograd.numpy as np
-from autograd import grad
-from minimc import neg_log_normal, mixture, hamiltonian_monte_carlo, neg_log_mvnormal
+from minimc import (
+    neg_log_normal,
+    mixture,
+    hamiltonian_monte_carlo,
+    neg_log_mvnormal,
+)
 from minimc.minimc_slow import hamiltonian_monte_carlo as hmc_slow
+from minimc.autograd_interface import AutogradPotential
 import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIGSIZE = (10, 7)
 
 if __name__ == "__main__":
-    plt.style.use("tufte")
+    # plt.style.use("tufte")
 
     ### Example 1 ###
     samples = hamiltonian_monte_carlo(
-        2000, neg_log_normal(0, 0.1), initial_position=0.0
+        2000, AutogradPotential(neg_log_normal(0, 0.1)), initial_position=0.0
     )
 
     ### Plot 1 ###
@@ -25,8 +30,8 @@ if __name__ == "__main__":
     plt.savefig(os.path.join(HERE, "plot1.png"))
 
     ### Example 2 ###
-    samples, positions, momentums, accepted = hmc_slow(
-        50, neg_log_normal(0, 0.1), 0.0, step_size=0.01
+    samples, positions, momentums, accepted, p_accepts = hmc_slow(
+        50, AutogradPotential(neg_log_normal(0, 0.1)), 0.0, step_size=0.01
     )
 
     ### Plot 2 ###
@@ -45,7 +50,7 @@ if __name__ == "__main__":
     ### Example 3 ###
     mu = np.zeros(2)
     cov = np.array([[1.0, 0.8], [0.8, 1.0]])
-    neg_log_p = neg_log_mvnormal(mu, cov)
+    neg_log_p = AutogradPotential(neg_log_mvnormal(mu, cov))
 
     samples = hamiltonian_monte_carlo(1000, neg_log_p, np.zeros(2))
 
@@ -59,8 +64,8 @@ if __name__ == "__main__":
     ### Example 4 ###
     np.random.seed(19)
 
-    samples, positions, momentums, accepted = hmc_slow(
-        10, neg_log_p, np.random.randn(2), path_len=4, step_size=0.01
+    samples, positions, momentums, accepted, p_accepts = hmc_slow(
+        10, neg_log_p, np.random.randn(2), path_len=4, step_size=0.01,
     )
 
     ### Plot 4 ###
@@ -94,7 +99,7 @@ if __name__ == "__main__":
         neg_log_normal(1.0, 0.3),
     ]
     probs = np.array([0.1, 0.5, 0.4])
-    neg_log_p = mixture(neg_log_probs, probs)
+    neg_log_p = AutogradPotential(mixture(neg_log_probs, probs))
     samples = hamiltonian_monte_carlo(2000, neg_log_p, 0.0)
 
     ### Plot 5 ###
@@ -105,7 +110,7 @@ if __name__ == "__main__":
 
     ### Example 6 ###
     np.random.seed(2)
-    samples, positions, momentums, accepted = hmc_slow(
+    samples, positions, momentums, accepted, p_accepts = hmc_slow(
         100, neg_log_p, 0.0, step_size=0.01
     )
 
@@ -131,13 +136,15 @@ if __name__ == "__main__":
     mu3 = np.array([-1.0, 2.0])
     cov3 = 0.3 * np.eye(2)
 
-    neg_log_p = mixture(
-        [
-            neg_log_mvnormal(mu1, cov1),
-            neg_log_mvnormal(mu2, cov2),
-            neg_log_mvnormal(mu3, cov3),
-        ],
-        [0.3, 0.3, 0.4],
+    neg_log_p = AutogradPotential(
+        mixture(
+            [
+                neg_log_mvnormal(mu1, cov1),
+                neg_log_mvnormal(mu2, cov2),
+                neg_log_mvnormal(mu3, cov3),
+            ],
+            [0.3, 0.3, 0.4],
+        )
     )
 
     samples = hamiltonian_monte_carlo(2000, neg_log_p, np.zeros(2))
@@ -154,7 +161,7 @@ if __name__ == "__main__":
     ### Example 8 ###
     np.random.seed(2)
 
-    samples, positions, momentums, accepted = hmc_slow(
+    samples, positions, momentums, accepted, p_accepts = hmc_slow(
         20, neg_log_p, np.zeros(2), path_len=3, step_size=0.01
     )
 
