@@ -4,9 +4,14 @@ from autograd import grad
 import autograd.numpy as np
 from numpy.testing import assert_allclose, assert_almost_equal
 
+from minimc.autograd_interface import AutogradPotential
 from minimc import neg_log_normal, neg_log_mvnormal
 from minimc.minimc_slow import hamiltonian_monte_carlo
-from minimc.integrators_slow import leapfrog, leapfrog_twostage, leapfrog_threestage
+from minimc.integrators_slow import (
+    leapfrog,
+    leapfrog_twostage,
+    leapfrog_threestage,
+)
 
 
 def test_leapfrog():
@@ -45,7 +50,7 @@ def test_hamiltonian_monte_carlo(integrator):
     # This mostly tests consistency. Tolerance chosen by experiment
     # Do statistical tests on your own time.
     np.random.seed(1)
-    neg_log_p = neg_log_normal(2, 0.1)
+    neg_log_p = AutogradPotential(neg_log_normal(2, 0.1))
     samples, *_ = hamiltonian_monte_carlo(
         100, neg_log_p, np.array(0.0), integrator=integrator
     )
@@ -57,7 +62,7 @@ def test_hamiltonian_monte_carlo_mv():
     np.random.seed(1)
     mu = np.arange(2)
     cov = 0.8 * np.ones((2, 2)) + 0.2 * np.eye(2)
-    neg_log_p = neg_log_mvnormal(mu, cov)
+    neg_log_p = AutogradPotential(neg_log_mvnormal(mu, cov))
 
     samples, *_ = hamiltonian_monte_carlo(
         100, neg_log_p, np.zeros(mu.shape), path_len=2.0
