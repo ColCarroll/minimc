@@ -1,6 +1,6 @@
 import pytest
 
-import autograd.numpy as np
+import numpy as np
 from numpy.testing import assert_allclose, assert_almost_equal
 
 from minimc.autograd_interface import AutogradPotential
