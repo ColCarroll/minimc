@@ -44,7 +44,8 @@ def hamiltonian_monte_carlo(
         Array of length `n_samples`.
     """
     initial_position = np.array(initial_position)
-    dVdq = lambda q: potential(q)[0]  # NOQA
+    negative_log_prob = lambda q: potential(q)[0]  # NOQA
+    dVdq = lambda q: potential(q)[1]  # NOQA
 
     # collect all our samples in a list
     samples = [initial_position]
@@ -67,8 +68,10 @@ def hamiltonian_monte_carlo(
         sample_momentums.append(momentums)
 
         # Check Metropolis acceptance criterion
-        start_log_p = potential(samples[-1])[0] - np.sum(momentum.logpdf(p0))
-        new_log_p = potential(q_new)[0] - np.sum(momentum.logpdf(p_new))
+        start_log_p = negative_log_prob(samples[-1]) - np.sum(
+            momentum.logpdf(p0)
+        )
+        new_log_p = negative_log_prob(q_new) - np.sum(momentum.logpdf(p_new))
         p_accept = np.exp(start_log_p - new_log_p)
         if np.random.rand() < p_accept:
             samples.append(q_new)
