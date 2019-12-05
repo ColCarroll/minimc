@@ -74,7 +74,7 @@ def hamiltonian_monte_carlo(
         )
         new_log_p = negative_log_prob(q_new) - np.sum(momentum.logpdf(p_new))
         energy_change = start_log_p - new_log_p
-        p_accept = min(1, np.exp(energy_change))
+        p_accept = np.exp(energy_change)
 
         if abs(energy_change) < max_energy_change:
             if np.random.rand() < p_accept:
@@ -86,11 +86,10 @@ def hamiltonian_monte_carlo(
                 else:
                     samples.append(q_new)
                 accepted.append(False)
-            p_accepts.append(p_accept)
         else:
             samples.append(np.copy(samples[-1]))
             accepted.append(False)
-            p_accepts.append(p_accept)
+        p_accepts.append(p_accept)
 
     return (
         np.array(samples[1:]),
