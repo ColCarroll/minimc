@@ -17,6 +17,7 @@ def hamiltonian_monte_carlo(
     path_len=1,
     step_size=0.1,
     integrator=leapfrog,
+    max_energy_change=1000.0,
     do_reject=True,
 ):
     """Run Hamiltonian Monte Carlo sampling.
@@ -72,15 +73,21 @@ def hamiltonian_monte_carlo(
             momentum.logpdf(p0)
         )
         new_log_p = negative_log_prob(q_new) - np.sum(momentum.logpdf(p_new))
-        p_accept = np.exp(start_log_p - new_log_p)
-        if np.random.rand() < p_accept:
-            samples.append(q_new)
-            accepted.append(True)
-        else:
-            if do_reject:
-                samples.append(np.copy(samples[-1]))
-            else:
+        energy_change = start_log_p - new_log_p
+        p_accept = np.exp(energy_change)
+
+        if abs(energy_change) < max_energy_change:
+            if np.random.rand() < p_accept:
                 samples.append(q_new)
+                accepted.append(True)
+            else:
+                if do_reject:
+                    samples.append(np.copy(samples[-1]))
+                else:
+                    samples.append(q_new)
+                accepted.append(False)
+        else:
+            samples.append(np.copy(samples[-1]))
             accepted.append(False)
         p_accepts.append(p_accept)
 
