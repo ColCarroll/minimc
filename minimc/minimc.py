@@ -75,19 +75,16 @@ def hamiltonian_monte_carlo(
 
         start_log_p = np.sum(momentum.logpdf(p0)) - initial_potential
         new_log_p = np.sum(momentum.logpdf(p_new)) - final_V
+
         energy_change = new_log_p - start_log_p
         p_accept = min(1, np.exp(energy_change))
+        diverging = abs(energy_change) >= max_energy_change
 
-        if abs(energy_change) < max_energy_change:
-            # Check Metropolis acceptance criterion
-            if np.random.rand() < p_accept:
-                samples.append(q_new)
-                initial_potential = final_V
-                initial_potential_grad = final_dVdq
-            else:
-                samples.append(np.copy(samples[-1]))
+        if not diverging and np.random.rand() < p_accept:
+            samples.append(q_new)
+            initial_potential = final_V
+            initial_potential_grad = final_dVdq
         else:
-            # Divergence encountered
             samples.append(np.copy(samples[-1]))
 
         if idx < tune - 1:
