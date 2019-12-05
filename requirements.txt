@@ -1,0 +1,3 @@
+autograd
+scipy
+tqdm
