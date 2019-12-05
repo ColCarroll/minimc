@@ -18,6 +18,7 @@ def hamiltonian_monte_carlo(
     path_len=1,
     initial_step_size=0.1,
     integrator=leapfrog,
+    max_energy_change=1000.0,
 ):
     """Run Hamiltonian Monte Carlo sampling.
 
@@ -35,6 +36,9 @@ def hamiltonian_monte_carlo(
         How long each integration path is. Smaller is faster and more correlated.
     initial_step_size : float
         How long each integration step is. This will be tuned automatically.
+    max_energy_change : float
+        The largest tolerable integration error. Transitions with energy changes
+        larger than this will be declared divergences.
 
     Returns
     -------
@@ -69,16 +73,23 @@ def hamiltonian_monte_carlo(
             step_size=step_size,
         )
 
-        # Check Metropolis acceptance criterion
         start_log_p = np.sum(momentum.logpdf(p0)) - initial_potential
         new_log_p = np.sum(momentum.logpdf(p_new)) - final_V
-        p_accept = min(1, np.exp(new_log_p - start_log_p))
-        if np.random.rand() < p_accept:
-            samples.append(q_new)
-            initial_potential = final_V
-            initial_potential_grad = final_dVdq
+        energy_change = new_log_p - start_log_p
+
+        if abs(energy_change) < max_energy_change:
+            # Check Metropolis acceptance criterion
+            p_accept = min(1, np.exp(energy_change))
+            if np.random.rand() < p_accept:
+                samples.append(q_new)
+                initial_potential = final_V
+                initial_potential_grad = final_dVdq
+            else:
+                samples.append(np.copy(samples[-1]))
         else:
+            # Divergence encountered
             samples.append(np.copy(samples[-1]))
+
         if idx < tune - 1:
             step_size, _ = step_size_tuning.update(p_accept)
         elif idx == tune - 1:
