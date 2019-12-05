@@ -79,4 +79,4 @@ def test_hamiltonian_monte_carlo_mv():
     )
     assert samples.shape[0] == 100
     assert_allclose(mu, np.mean(samples, axis=0), atol=0.3)
-    assert_allclose(cov, np.cov(samples.T), atol=0.3)
+    assert_allclose(cov, np.cov(samples.T), atol=0.5)

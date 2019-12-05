@@ -76,18 +76,14 @@ def hamiltonian_monte_carlo(
         energy_change = start_log_p - new_log_p
         p_accept = np.exp(energy_change)
 
-        if abs(energy_change) < max_energy_change:
-            if np.random.rand() < p_accept:
-                samples.append(q_new)
-                accepted.append(True)
-            else:
-                if do_reject:
-                    samples.append(np.copy(samples[-1]))
-                else:
-                    samples.append(q_new)
-                accepted.append(False)
+        if np.random.rand() < p_accept:
+            samples.append(q_new)
+            accepted.append(True)
         else:
-            samples.append(np.copy(samples[-1]))
+            if do_reject:
+                samples.append(np.copy(samples[-1]))
+            else:
+                samples.append(q_new)
             accepted.append(False)
         p_accepts.append(p_accept)
 
