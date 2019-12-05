@@ -16,11 +16,11 @@ Currently Implemented
 - Leapfrog integrator
 - Hamiltonian Monte Carlo
 - Some log probabilities (normal, multivariate normal, mixtures, funnel)
+- Divergences
 
 Roadmap
 -------
 
-- Divergences
 - Mass matrix adaptation
 - Diagnostics
 - [NUTS](https://arxiv.org/abs/1111.4246)
