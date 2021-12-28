@@ -43,9 +43,10 @@ The API of `minimc` is mimicked in `minimc.minimc_slow`, which returns trajector
 ```python
 import autograd.numpy as np
 from minimc import neg_log_normal, hamiltonian_monte_carlo
+from minimc.autograd_interface import AutogradPotential
 
-samples = hamiltonian_monte_carlo(2_000, neg_log_normal(0, 0.1),
-                                  initial_position=0.)
+neg_log_p = AutogradPotential(neg_log_normal(0, 0.1))
+samples = hamiltonian_monte_carlo(2_000, neg_log_p, initial_position=0.)
 
 100%|███████████████████████████████████████████| 2500/2500 [00:04<00:00, 615.91it/s]
 ```
@@ -55,9 +56,9 @@ samples = hamiltonian_monte_carlo(2_000, neg_log_normal(0, 0.1),
 ```python
 from minimc.minimc_slow import hamiltonian_monte_carlo as hmc_slow
 
-samples, positions, momentums, accepted  = hmc_slow(50, neg_log_normal(0, 0.1),
-                                                         initial_position=0.,
-                                                         step_size=0.01)
+samples, positions, momentums, accepted, p_accepts = hmc_slow(50, neg_log_p,
+                                                              initial_position=0.,
+                                                              step_size=0.01)
 
 100%|███████████████████████████████████████████| 50/50 [00:00<00:00, 52.72it/s]
 ```
@@ -68,7 +69,7 @@ from minimc import neg_log_mvnormal
 
 mu = np.zeros(2)
 cov = np.array([[1.0, 0.8], [0.8, 1.0]])
-neg_log_p = neg_log_mvnormal(mu, cov)
+neg_log_p = AutogradPotential(neg_log_mvnormal(mu, cov))
 
 samples = hamiltonian_monte_carlo(1000, neg_log_p, np.zeros(2))
 
@@ -78,9 +79,10 @@ samples = hamiltonian_monte_carlo(1000, neg_log_p, np.zeros(2))
 <img src="examples/plot3.png" width="400">
 
 ```python
-samples, positions, momentums, accepted = hmc_slow(10, neg_log_p, np.zeros(2),
-                                                   path_len=4,
-                                                   step_size=0.01)
+samples, positions, momentums, accepted, p_accepts = hmc_slow(10, neg_log_p,
+                                                              np.zeros(2),
+                                                              path_len=4,
+                                                              step_size=0.01)
 
 100%|███████████████████████████████████████████| 10/10 [00:01<00:00, 9.06it/s]
 ```
@@ -92,7 +94,7 @@ from minimc import mixture
 
 neg_log_probs = [neg_log_normal(1.0, 0.5), neg_log_normal(-1.0, 0.5)]
 probs = np.array([0.2, 0.8])
-neg_log_p = mixture(neg_log_probs, probs)
+neg_log_p = AutogradPotential(mixture(neg_log_probs, probs))
 samples = hamiltonian_monte_carlo(2000, neg_log_p, 0.0)
 
 neg_log_probs = [
@@ -101,7 +103,7 @@ neg_log_probs = [
     neg_log_normal(1.0, 0.3),
     ]
 probs = np.array([0.1, 0.5, 0.4])
-neg_log_p = mixture(neg_log_probs, probs)
+neg_log_p = AutogradPotential(mixture(neg_log_probs, probs))
 samples = hamiltonian_monte_carlo(2_000, neg_log_p, 0.)
 
 100%|███████████████████████████████████████████| 2000/2000 [00:09<00:00, 261.17it/s]
@@ -110,7 +112,9 @@ samples = hamiltonian_monte_carlo(2_000, neg_log_p, 0.)
 <img src="examples/plot5.png" width="400">
 
 ```python
-samples, positions, momentums, accepted = hmc_slow(100, neg_log_p, 0.0, step_size=0.01)
+samples, positions, momentums, accepted, p_accepts = hmc_slow(100, neg_log_p,
+                                                              0.0,
+                                                              step_size=0.01)
 
 100%|███████████████████████████████████████████| 100/100 [00:07<00:00, 14.04it/s]
 ```
@@ -128,14 +132,14 @@ cov2 = 0.2 * np.array([[1.0, -0.6],
 mu3 = np.array([-1.0, 2.0])
 cov3 = 0.3 * np.eye(2)
 
-neg_log_p = mixture(
+neg_log_p = AutogradPotential(mixture(
     [
         neg_log_mvnormal(mu1, cov1),
         neg_log_mvnormal(mu2, cov2),
         neg_log_mvnormal(mu3, cov3),
     ],
     [0.3, 0.3, 0.4],
-)
+))
 
 samples = hamiltonian_monte_carlo(2000, neg_log_p, np.zeros(2))
 
@@ -145,9 +149,10 @@ samples = hamiltonian_monte_carlo(2000, neg_log_p, np.zeros(2))
 <img src="examples/plot7.png" width="400">
 
 ```python
-samples, positions, momentums, accepted = hmc_slow(20, neg_log_p, np.zeros(2),
-                                                   path_len=3,
-                                                   step_size=0.01)
+samples, positions, momentums, accepted, p_accepts = hmc_slow(20, neg_log_p,
+                                                              np.zeros(2),
+                                                              path_len=3,
+                                                              step_size=0.01)
 
 100%|███████████████████████████████████████████| 20/20 [00:08<00:00, 2.31it/s]
 ```
